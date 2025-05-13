@@ -1,0 +1,16 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Lauriethefish/QuestPatcher.QMod/main/QuestPatcher.QMod/Resources/qmod.schema.json",
+  "_QPVersion": "0.1.1",
+  "name": "${mod_name}",
+  "id": "${mod_id}",
+  "author": "DanTheMan827",
+  "version": "${version}",
+  "packageId": "com.harmonixmusic.kata",
+  "description": "Redirects the save files to the ModData directory.",
+  "dependencies": [],
+  "modFiles": [
+    "${binary}"
+  ],
+  "libraryFiles": [],
+  "fileCopies": []
+}
