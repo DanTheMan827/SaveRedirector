@@ -10,7 +10,7 @@
 #include "rapidjson/writer.h"
 #include "utils/FileSystem.hpp"
 
-namespace DanTheMan827::SaveRedirection {
+namespace DanTheMan827::SaveRedirector {
     using namespace std;
     using namespace AudicaHook::Utils::Strings;
 
@@ -167,62 +167,63 @@ namespace DanTheMan827::SaveRedirection {
         SavePlayerPrefs();
     }
 
-    MAKE_EARLY_HOOK_FIND(PlayerPrefs_DeleteKey, "UnityEngine", "PlayerPrefs", "DeleteKey", void, System_String_o* key) {
-        unique_lock<shared_mutex> lock(prefsLock);
+    namespace Hooks {
+        MAKE_EARLY_HOOK_FIND(PlayerPrefs_DeleteKey, "UnityEngine", "PlayerPrefs", "DeleteKey", void, System_String_o* key) {
+            unique_lock<shared_mutex> lock(prefsLock);
 
-        auto playerPrefsDoc = GetPlayerPrefs();
-        string keyStr = il2cpp_to_std(key);
-        Logger.info("Delete PlayerPrefs key: {}", keyStr.c_str());
-        if ((*playerPrefsDoc).HasMember(keyStr.c_str())) {
-            (*playerPrefsDoc).RemoveMember(keyStr.c_str());
-            Logger.info("Deleted PlayerPrefs key: {}", keyStr.c_str());
+            auto playerPrefsDoc = GetPlayerPrefs();
+            string keyStr = il2cpp_to_std(key);
+            Logger.info("Delete PlayerPrefs key: {}", keyStr.c_str());
+            if ((*playerPrefsDoc).HasMember(keyStr.c_str())) {
+                (*playerPrefsDoc).RemoveMember(keyStr.c_str());
+                Logger.info("Deleted PlayerPrefs key: {}", keyStr.c_str());
+            }
         }
-    }
 
-    MAKE_EARLY_HOOK_FIND(PlayerPrefs_GetFloat, "UnityEngine", "PlayerPrefs", "GetFloat", float, System_String_o* key, float defaultValue) {
-        return GetPlayerPrefsValue<float>(key, defaultValue);
-    }
+        MAKE_EARLY_HOOK_FIND(PlayerPrefs_GetFloat, "UnityEngine", "PlayerPrefs", "GetFloat", float, System_String_o* key, float defaultValue) {
+            return GetPlayerPrefsValue<float>(key, defaultValue);
+        }
 
-    MAKE_EARLY_HOOK_FIND(PlayerPrefs_GetInt, "UnityEngine", "PlayerPrefs", "GetInt", int32_t, System_String_o* key, int32_t defaultValue) {
-        return GetPlayerPrefsValue<int32_t>(key, defaultValue);
-    }
+        MAKE_EARLY_HOOK_FIND(PlayerPrefs_GetInt, "UnityEngine", "PlayerPrefs", "GetInt", int32_t, System_String_o* key, int32_t defaultValue) {
+            return GetPlayerPrefsValue<int32_t>(key, defaultValue);
+        }
 
-    MAKE_EARLY_HOOK_FIND(
-        PlayerPrefs_GetString, "UnityEngine", "PlayerPrefs", "GetString", System_String_o*, System_String_o* key, System_String_o* defaultValue
-    ) {
-        return GetPlayerPrefsValue<System_String_o*>(key, defaultValue);
-    }
+        MAKE_EARLY_HOOK_FIND(
+            PlayerPrefs_GetString, "UnityEngine", "PlayerPrefs", "GetString", System_String_o*, System_String_o* key, System_String_o* defaultValue
+        ) {
+            return GetPlayerPrefsValue<System_String_o*>(key, defaultValue);
+        }
 
-    MAKE_EARLY_HOOK_FIND(PlayerPrefs_SetFloat, "UnityEngine", "PlayerPrefs", "SetFloat", void, System_String_o* key, float value) {
-        SetPlayerPrefsValue(il2cpp_to_std(key), value);
-    }
+        MAKE_EARLY_HOOK_FIND(PlayerPrefs_SetFloat, "UnityEngine", "PlayerPrefs", "SetFloat", void, System_String_o* key, float value) {
+            SetPlayerPrefsValue(il2cpp_to_std(key), value);
+        }
 
-    MAKE_EARLY_HOOK_FIND(PlayerPrefs_SetInt, "UnityEngine", "PlayerPrefs", "SetInt", void, System_String_o* key, int32_t value) {
-        SetPlayerPrefsValue(il2cpp_to_std(key), value);
-    }
+        MAKE_EARLY_HOOK_FIND(PlayerPrefs_SetInt, "UnityEngine", "PlayerPrefs", "SetInt", void, System_String_o* key, int32_t value) {
+            SetPlayerPrefsValue(il2cpp_to_std(key), value);
+        }
 
-    MAKE_EARLY_HOOK_FIND(PlayerPrefs_SetString, "UnityEngine", "PlayerPrefs", "SetString", void, System_String_o* key, System_String_o* value) {
-        SetPlayerPrefsValue(il2cpp_to_std(key), value);
-    }
+        MAKE_EARLY_HOOK_FIND(PlayerPrefs_SetString, "UnityEngine", "PlayerPrefs", "SetString", void, System_String_o* key, System_String_o* value) {
+            SetPlayerPrefsValue(il2cpp_to_std(key), value);
+        }
 
-    MAKE_EARLY_HOOK_FIND(PlayerPrefs_HasKey, "UnityEngine", "PlayerPrefs", "HasKey", bool, System_String_o* key) {
-        shared_lock<shared_mutex> lock(prefsLock);
+        MAKE_EARLY_HOOK_FIND(PlayerPrefs_HasKey, "UnityEngine", "PlayerPrefs", "HasKey", bool, System_String_o* key) {
+            shared_lock<shared_mutex> lock(prefsLock);
 
-        auto playerPrefsDoc = GetPlayerPrefs();
-        string keyStr = il2cpp_to_std(key);
-        Logger.info("Check PlayerPrefs has key: {}", keyStr.c_str());
-        return (*playerPrefsDoc).HasMember(keyStr.c_str());
-    }
+            auto playerPrefsDoc = GetPlayerPrefs();
+            string keyStr = il2cpp_to_std(key);
+            Logger.info("Check PlayerPrefs has key: {}", keyStr.c_str());
+            return (*playerPrefsDoc).HasMember(keyStr.c_str());
+        }
 
-    MAKE_EARLY_HOOK_FIND(PlayerPrefs_Save, "UnityEngine", "PlayerPrefs", "Save", void) {
-        SavePlayerPrefs();
-    }
+        MAKE_EARLY_HOOK_FIND(PlayerPrefs_Save, "UnityEngine", "PlayerPrefs", "Save", void) {
+            SavePlayerPrefs();
+        }
 
-    MAKE_EARLY_HOOK_FIND(SaveIO_GenName, "", "SaveIO", "GenName", System_String_o*, System_String_o* fileName, bool perSystem) {
-        auto fileNameStr = il2cpp_to_std(fileName);
-        Logger.info("SaveIO_GenName: {}, {} = {}", fileNameStr.c_str(), perSystem, Utils::FileSystem::dataDir);
+        MAKE_EARLY_HOOK_FIND(SaveIO_GenName, "", "SaveIO", "GenName", System_String_o*, System_String_o* fileName, bool perSystem) {
+            auto fileNameStr = il2cpp_to_std(fileName);
+            Logger.info("SaveIO_GenName: {}, {} = {}", fileNameStr.c_str(), perSystem, Utils::FileSystem::dataDir);
 
-        return std_to_il2cpp<System_String_o*>(fmt::format("{}/{}", Utils::FileSystem::dataDir, fileNameStr));
-    }
-
-}  // namespace DanTheMan827::SaveRedirection
+            return std_to_il2cpp<System_String_o*>(fmt::format("{}/{}", Utils::FileSystem::dataDir, fileNameStr));
+        }
+    }  // namespace Hooks
+}  // namespace DanTheMan827::SaveRedirector

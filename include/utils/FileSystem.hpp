@@ -17,7 +17,7 @@
 
 #include "modInfo.hpp"
 
-namespace DanTheMan827::SaveRedirection::Utils {
+namespace DanTheMan827::SaveRedirector::Utils {
     class FileSystem {
         DEFINE_GET_PROPERTY(dataDir, std::string, {
             static auto dataDir = AudicaHook::Utils::FileSystem::getDataDir(modInfo.id.c_str());
@@ -29,4 +29,4 @@ namespace DanTheMan827::SaveRedirection::Utils {
             return playerPrefsConfigPath;
         })
     };
-}  // namespace DanTheMan827::SaveRedirection::Utils
+}  // namespace DanTheMan827::SaveRedirector::Utils
