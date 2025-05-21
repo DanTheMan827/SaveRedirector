@@ -1,13 +1,14 @@
+#include <rapidjson/document.h>
+#include <rapidjson/istreamwrapper.h>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+
 #include <audica-hook/utils/hooking.hpp>
 #include <audica-hook/utils/strings.hpp>
 #include <shared_mutex>
 
 #include "logger.hpp"
-#include "rapidjson/document.h"
-#include "rapidjson/istreamwrapper.h"
-#include "rapidjson/rapidjson.h"
-#include "rapidjson/stringbuffer.h"
-#include "rapidjson/writer.h"
 #include "utils/FileSystem.hpp"
 
 namespace DanTheMan827::SaveRedirector {
@@ -22,7 +23,7 @@ namespace DanTheMan827::SaveRedirector {
         static rapidjson::Document playerPrefsDoc;
 
         if (!initialized) {
-            auto playerPrefsPath = Utils::FileSystem::playerPrefsConfigPath;
+            auto playerPrefsPath = Utils::FileSystem::getPlayerPrefsConfigPath();
 
             if (AudicaHook::Utils::FileSystem::fileExists(playerPrefsPath)) {
                 ifstream file;
@@ -52,7 +53,7 @@ namespace DanTheMan827::SaveRedirector {
         thread saveThread([]() {
             unique_lock<shared_mutex> lock(prefsLock);
             auto playerPrefsDoc = GetPlayerPrefs();
-            auto playerPrefsPath = Utils::FileSystem::playerPrefsConfigPath;
+            auto playerPrefsPath = Utils::FileSystem::getPlayerPrefsConfigPath();
 
             Logger.info("Saving PlayerPrefs to: {}", playerPrefsPath.c_str());
 
@@ -221,9 +222,9 @@ namespace DanTheMan827::SaveRedirector {
 
         MAKE_EARLY_HOOK_FIND(SaveIO_GenName, "", "SaveIO", "GenName", System_String_o*, System_String_o* fileName, bool perSystem) {
             auto fileNameStr = il2cpp_to_std(fileName);
-            Logger.info("SaveIO_GenName: {}, {} = {}", fileNameStr.c_str(), perSystem, Utils::FileSystem::dataDir);
+            Logger.info("SaveIO_GenName: {}, {} = {}", fileNameStr.c_str(), perSystem, Utils::FileSystem::getDataDir());
 
-            return std_to_il2cpp<System_String_o*>(fmt::format("{}/{}", Utils::FileSystem::dataDir, fileNameStr));
+            return std_to_il2cpp<System_String_o*>(fmt::format("{}/{}", Utils::FileSystem::getDataDir(), fileNameStr));
         }
     }  // namespace Hooks
 }  // namespace DanTheMan827::SaveRedirector
