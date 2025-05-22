@@ -173,13 +173,13 @@
     {
       "dependency": {
         "id": "audica-hook",
-        "versionRange": "=0.1.1",
+        "versionRange": "=0.1.2",
         "additionalData": {
-          "soLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.1/libAudicaHook.so",
-          "debugSoLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.1/debug_libAudicaHook.so",
+          "soLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.2/libAudicaHook.so",
+          "debugSoLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.2/debug_libAudicaHook.so",
           "overrideSoName": "libAudicaHook.so",
-          "modLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.1/AudicaHook.qmod",
-          "branchName": "version/v0_1_1",
+          "modLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.2/AudicaHook.qmod",
+          "branchName": "version/v0_1_2",
           "compileOptions": {
             "includePaths": [],
             "systemIncludes": [
@@ -192,7 +192,7 @@
           "cmake": true
         }
       },
-      "version": "0.1.1"
+      "version": "0.1.2"
     }
   ]
 }
