@@ -82,7 +82,7 @@
       },
       {
         "id": "audica-hook",
-        "versionRange": "^0.1.0",
+        "versionRange": "^0.1.3",
         "additionalData": {}
       },
       {
@@ -102,22 +102,27 @@
   "restoredDependencies": [
     {
       "dependency": {
-        "id": "fmt",
-        "versionRange": "=11.0.2",
+        "id": "audica-hook",
+        "versionRange": "=0.1.3",
         "additionalData": {
-          "headersOnly": true,
-          "branchName": "version/v11_0_2",
+          "soLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.3/libAudicaHook.so",
+          "debugSoLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.3/debug_libAudicaHook.so",
+          "overrideSoName": "libAudicaHook.so",
+          "modLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.3/AudicaHook.qmod",
+          "branchName": "version/v0_1_3",
           "compileOptions": {
+            "includePaths": [],
             "systemIncludes": [
-              "fmt/include/"
+              "shared"
             ],
             "cppFlags": [
-              "-DFMT_HEADER_ONLY"
+              "-Wno-extra-qualification"
             ]
-          }
+          },
+          "cmake": true
         }
       },
-      "version": "11.0.2"
+      "version": "0.1.3"
     },
     {
       "dependency": {
@@ -140,22 +145,22 @@
     },
     {
       "dependency": {
-        "id": "And64InlineHook",
-        "versionRange": "=0.1.1",
+        "id": "fmt",
+        "versionRange": "=11.0.2",
         "additionalData": {
-          "staticLinking": true,
-          "soLink": "https://github.com/DanTheMan827-QPM/And64InlineHook/releases/download/v0.1.1/libAnd64InlineHook.a",
-          "overrideSoName": "libAnd64InlineHook.a",
-          "branchName": "version/v0_1_1",
+          "headersOnly": true,
+          "branchName": "version/v11_0_2",
           "compileOptions": {
             "systemIncludes": [
-              "shared"
+              "fmt/include/"
+            ],
+            "cppFlags": [
+              "-DFMT_HEADER_ONLY"
             ]
-          },
-          "cmake": true
+          }
         }
       },
-      "version": "0.1.1"
+      "version": "11.0.2"
     },
     {
       "dependency": {
@@ -172,27 +177,22 @@
     },
     {
       "dependency": {
-        "id": "audica-hook",
-        "versionRange": "=0.1.2",
+        "id": "And64InlineHook",
+        "versionRange": "=0.1.1",
         "additionalData": {
-          "soLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.2/libAudicaHook.so",
-          "debugSoLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.2/debug_libAudicaHook.so",
-          "overrideSoName": "libAudicaHook.so",
-          "modLink": "https://github.com/DanTheMan827-QPM/audica-hook/releases/download/v0.1.2/AudicaHook.qmod",
-          "branchName": "version/v0_1_2",
+          "staticLinking": true,
+          "soLink": "https://github.com/DanTheMan827-QPM/And64InlineHook/releases/download/v0.1.1/libAnd64InlineHook.a",
+          "overrideSoName": "libAnd64InlineHook.a",
+          "branchName": "version/v0_1_1",
           "compileOptions": {
-            "includePaths": [],
             "systemIncludes": [
               "shared"
-            ],
-            "cppFlags": [
-              "-Wno-extra-qualification"
             ]
           },
           "cmake": true
         }
       },
-      "version": "0.1.2"
+      "version": "0.1.1"
     }
   ]
 }
