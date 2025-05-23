@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <scotland2/shared/loader.hpp>
 
+#include "Hooks/SaveRedirection.hpp"
 #include "logger.hpp"
 #include "modInfo.hpp"
 
@@ -24,6 +25,8 @@ MOD_EXPORT_FUNC void setup(CModInfo& info) {
     info = modInfo.to_c();
 
     Logger.info("Completed setup!");
+
+    DanTheMan827::SaveRedirector::SaveRedirection::initPlayerPrefs();
 }
 
 /// @brief Called early on in the game loading
