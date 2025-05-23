@@ -70,7 +70,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE -llog)
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${INCLUDE_DIR})
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${SHARED_DIR})
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/rapidjson/include)
 
 # Include "mmkay" if it exists, mmkay?
 if(EXISTS "${EXTERN_DIR}/includes/mmkay/shared/mmkay.cmake")

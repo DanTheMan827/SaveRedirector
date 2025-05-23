@@ -17,13 +17,13 @@
 #include "modInfo.hpp"
 
 namespace DanTheMan827::SaveRedirector::Utils::FileSystem {
-    static inline std::string getDataDir() {
-        static auto dataDir = AudicaHook::Utils::FileSystem::getDataDir(modInfo.id.c_str());
+    inline std::string const getDataDir() {
+        static auto const dataDir = AudicaHook::Utils::FileSystem::getDataDir(modInfo.id.c_str());
         return dataDir;
     }
 
-    static inline std::string getPlayerPrefsConfigPath() {
-        static std::string playerPrefsConfigPath = fmt::format("{}/{}", getDataDir(), "player_prefs.json");
+    inline std::string const getPlayerPrefsConfigPath() {
+        static std::string const playerPrefsConfigPath = fmt::format("{}/{}", getDataDir(), "player_prefs.json");
         return playerPrefsConfigPath;
     }
 }  // namespace DanTheMan827::SaveRedirector::Utils::FileSystem

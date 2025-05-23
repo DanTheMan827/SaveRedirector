@@ -91,6 +91,11 @@
         "additionalData": {}
       },
       {
+        "id": "rapidjson",
+        "versionRange": "^0.1.0",
+        "additionalData": {}
+      },
+      {
         "id": "scotland2",
         "versionRange": "^0.1.6",
         "additionalData": {
@@ -193,6 +198,22 @@
         }
       },
       "version": "0.1.1"
+    },
+    {
+      "dependency": {
+        "id": "rapidjson",
+        "versionRange": "=0.1.20250205132808",
+        "additionalData": {
+          "headersOnly": true,
+          "branchName": "version/v0_1_20250205132808+24b5e7a8",
+          "compileOptions": {
+            "systemIncludes": [
+              "rapidjson/include"
+            ]
+          }
+        }
+      },
+      "version": "0.1.20250205132808+24b5e7a8"
     }
   ]
 }

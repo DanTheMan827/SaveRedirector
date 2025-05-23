@@ -5,226 +5,226 @@
 #include <rapidjson/writer.h>
 
 #include <audica-hook/utils/hooking.hpp>
-#include <audica-hook/utils/strings.hpp>
+#include <cstddef>
 #include <shared_mutex>
 
 #include "logger.hpp"
 #include "utils/FileSystem.hpp"
+#include "utils/String.hpp"
 
-namespace DanTheMan827::SaveRedirector {
+namespace DanTheMan827::SaveRedirector::SaveRedirection {
     using namespace std;
-    using namespace AudicaHook::Utils::Strings;
+    using namespace Utils::String;
 
-    static shared_mutex prefsLock;
-    static unordered_map<string, rapidjson::Value> playerPrefsData;
+    shared_mutex prefs_lock;
+    rapidjson::Document prefs_doc;
+    std::string prefs_path = NULL;
 
-    rapidjson::Document* GetPlayerPrefs() {
+    void initPlayerPrefs() {
         static bool initialized = false;
-        static rapidjson::Document playerPrefsDoc;
 
         if (!initialized) {
-            auto playerPrefsPath = Utils::FileSystem::getPlayerPrefsConfigPath();
+            prefs_path = Utils::FileSystem::getPlayerPrefsConfigPath();
 
-            if (AudicaHook::Utils::FileSystem::fileExists(playerPrefsPath)) {
+            if (AudicaHook::Utils::FileSystem::fileExists(prefs_path)) {
                 ifstream file;
 
-                file.open(playerPrefsPath);
+                file.open(prefs_path);
 
                 if (file.is_open()) {
                     rapidjson::IStreamWrapper is{file};
-                    playerPrefsDoc.ParseStream(is);
+                    prefs_doc.ParseStream(is);
                     file.close();
                 } else {
-                    Logger.error("Failed to open PlayerPrefs file: {}", playerPrefsPath.c_str());
+                    Logger.error("Failed to open PlayerPrefs file: {}", prefs_path.c_str());
                 }
             } else {
-                Logger.info("PlayerPrefs file not found: {}", playerPrefsPath.c_str());
+                Logger.info("PlayerPrefs file not found: {}", prefs_path.c_str());
 
                 // Load a blank document
-                playerPrefsDoc.SetObject();
+                prefs_doc.SetObject();
                 initialized = true;
             }
         }
-
-        return &playerPrefsDoc;
     }
 
-    void SavePlayerPrefs() {
-        thread saveThread([]() {
-            unique_lock<shared_mutex> lock(prefsLock);
-            auto playerPrefsDoc = GetPlayerPrefs();
-            auto playerPrefsPath = Utils::FileSystem::getPlayerPrefsConfigPath();
+    void savePlayerPrefs() {
+        unique_lock<shared_mutex> lock(prefs_lock);
+        static auto playerPrefsPath = Utils::FileSystem::getPlayerPrefsConfigPath();
 
-            Logger.info("Saving PlayerPrefs to: {}", playerPrefsPath.c_str());
+        Logger.info("Saving PlayerPrefs to: {}", playerPrefsPath.c_str());
 
-            // Write the JSON document to a file
-            ofstream file;
-            file.open(playerPrefsPath);
+        // Write the JSON document to a file
+        ofstream file;
+        file.open(playerPrefsPath);
 
-            if (file.is_open()) {
-                rapidjson::StringBuffer buffer;
-                rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-                (*playerPrefsDoc).Accept(writer);
-                file << buffer.GetString();
-                file.close();
-                Logger.info("PlayerPrefs saved");
-            } else {
-                Logger.error("Failed to open PlayerPrefs file for writing: {}", playerPrefsPath.c_str());
-            }
-        });
-
-        saveThread.detach();
-        Logger.info("PlayerPrefs save thread started");
-    }
-
-    template <typename T>
-    T GetPlayerPrefsValue(System_String_o* key, T defaultValue = T()) {
-        shared_lock<shared_mutex> lock(prefsLock);
-        auto playerPrefsDoc = GetPlayerPrefs();
-        string keyStr = il2cpp_to_std(key);
-
-        Logger.info("Check PlayerPrefs key: {}", keyStr.c_str());
-
-        if ((*playerPrefsDoc).HasMember(keyStr.c_str())) {
-            auto const& member = (*playerPrefsDoc)[keyStr.c_str()];
-
-            // Type-specific handling using template specialization
-            if constexpr (is_same_v<T, int32_t>) {
-                Logger.info("Get PlayerPrefs int: {}", keyStr.c_str());
-                if (member.IsInt()) {
-                    auto value = member.GetInt();
-                    Logger.info("PlayerPrefs int found: {} = {}", keyStr.c_str(), value);
-                    return value;
-                }
-            } else if constexpr (is_same_v<T, float>) {
-                Logger.info("Get PlayerPrefs float: {}", keyStr.c_str());
-                if (member.IsFloat() || member.IsNumber()) {
-                    auto value = member.GetFloat();
-                    Logger.info("PlayerPrefs float found: {} = {}", keyStr.c_str(), value);
-                    return value;
-                }
-            } else if constexpr (is_same_v<T, System_String_o*>) {
-                Logger.info("Get PlayerPrefs string: {}", keyStr.c_str());
-                if (member.IsString()) {
-                    auto value = member.GetString();
-                    Logger.info("PlayerPrefs string found: {} = {}", keyStr.c_str(), value);
-                    return (T) (il2cpp_utils::createcsstr(value));
-                }
-            }
+        if (!file.is_open()) {
+            Logger.error("Failed to open PlayerPrefs file for writing: {}", playerPrefsPath.c_str());
+            return;
         }
 
-        // Log default value based on type
-        if constexpr (is_same_v<T, System_String_o*>) {
-            Logger.info("Using default value: {}", defaultValue ? il2cpp_to_std(defaultValue).c_str() : "");
-        } else {
-            Logger.info("Using default value: {}", defaultValue);
-        }
-
-        return defaultValue;
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        prefs_doc.Accept(writer);
+        file << buffer.GetString();
+        file.close();
+        Logger.info("PlayerPrefs saved");
     }
 
     template <typename T>
     concept PlayerPrefsType = is_same_v<T, int32_t> || is_same_v<T, float> || is_same_v<T, System_String_o*>;
 
     template <PlayerPrefsType T>
-    void SetPlayerPrefsValue(string const& key, T value) {
+    T getPrefsValue(System_String_o* key, T defaultValue = T()) {
+        shared_lock<shared_mutex> lock(prefs_lock);
+
+        auto keyStr = convert_il2cpp(key);
+        auto keyConst = keyStr.c_str();
+
+        Logger.info("Read {}", keyConst);
+
+        if (!prefs_doc.HasMember(keyConst)) {
+            if constexpr (is_same_v<T, System_String_o*>) {
+                Logger.info("{} not found, using default value: {}", keyConst, defaultValue ? convert_il2cpp(defaultValue).c_str() : "");
+            } else {
+                Logger.info("{} not found, using default value: {}", keyConst, defaultValue);
+            }
+
+            return defaultValue;
+        }
+
+        auto const& member = prefs_doc[keyConst];
+
+        // Type-specific handling using template specialization
+        if constexpr (is_same_v<T, int32_t>) {
+            if (!member.IsInt()) {
+                Logger.warn("{} is not int", keyConst);
+                return defaultValue;
+            }
+
+            auto value = member.GetInt();
+            Logger.info("int found: {} = {}", keyConst, value);
+            return value;
+        } else if constexpr (is_same_v<T, float>) {
+            if (!(member.IsFloat() || member.IsNumber())) {
+                Logger.warn("{} is not float", keyConst);
+                return defaultValue;
+            }
+
+            auto value = member.GetFloat();
+            Logger.info("float found: {} = {}", keyConst, value);
+            return value;
+        } else if constexpr (is_same_v<T, System_String_o*>) {
+            if (!member.IsString()) {
+                Logger.warn("{} is not string", keyConst);
+                return defaultValue;
+            }
+
+            auto value = member.GetString();
+            Logger.info("PlayerPrefs string found: {} = {}", keyConst, value);
+            return (T) (il2cpp_utils::createcsstr(value));
+        }
+    }
+
+    template <PlayerPrefsType T>
+    void setPrefsValue(string const& key, T value) {
         {
-            unique_lock<shared_mutex> lock(prefsLock);
-            auto playerPrefsDoc = GetPlayerPrefs();
+            unique_lock<shared_mutex> lock(prefs_lock);
 
-            Logger.info("Set PlayerPrefs key: {}", key.c_str());
+            Logger.info("Set {}", key.c_str());
 
-            if (!(*playerPrefsDoc).HasMember(key.c_str())) {
-                Logger.info("Creating new PlayerPrefs key: {}", key.c_str());
-                rapidjson::Value keyName(key.c_str(), (*playerPrefsDoc).GetAllocator());
+            if (!prefs_doc.HasMember(key.c_str())) {
+                Logger.info("Creating {}", key.c_str());
+                rapidjson::Value keyName(key.c_str(), prefs_doc.GetAllocator());
                 rapidjson::Value newValue;
 
-                if constexpr (is_same_v<T, int32_t>) {
-                    Logger.info("Set PlayerPrefs int: {} = {}", key.c_str(), value);
-                    (*playerPrefsDoc)[key.c_str()].SetInt(value);
-                } else if constexpr (is_same_v<T, float>) {
-                    Logger.info("Set PlayerPrefs float: {} = {}", key.c_str(), value);
-                    (*playerPrefsDoc)[key.c_str()].SetFloat(value);
+                if constexpr (is_same_v<T, int32_t> || is_same_v<T, float>) {
+                    newValue = rapidjson::Value(rapidjson::kNumberType);
                 } else if constexpr (is_same_v<T, System_String_o*>) {
                     newValue = rapidjson::Value(rapidjson::kStringType);
                 }
 
-                (*playerPrefsDoc).AddMember(keyName, newValue, (*playerPrefsDoc).GetAllocator());
+                prefs_doc.AddMember(keyName, newValue, prefs_doc.GetAllocator());
             }
 
             if constexpr (is_same_v<T, int32_t>) {
                 Logger.info("Set PlayerPrefs int: {} = {}", key.c_str(), value);
-                (*playerPrefsDoc)[key.c_str()].SetInt(value);
+                prefs_doc[key.c_str()].SetInt(value);
             } else if constexpr (is_same_v<T, float>) {
                 Logger.info("Set PlayerPrefs float: {} = {}", key.c_str(), value);
-                (*playerPrefsDoc)[key.c_str()].SetFloat(value);
+                prefs_doc[key.c_str()].SetFloat(value);
             } else if constexpr (is_same_v<T, System_String_o*>) {
-                Logger.info("Set PlayerPrefs string: {} = {}", key.c_str(), il2cpp_to_std(value).c_str());
-                string valueStr = il2cpp_to_std(value);
-                (*playerPrefsDoc)[key.c_str()].SetString(valueStr.c_str(), (*playerPrefsDoc).GetAllocator());
+                Logger.info("Set PlayerPrefs string: {} = {}", key.c_str(), convert_il2cpp(value).c_str());
+                string valueStr = convert_il2cpp(value);
+                prefs_doc[key.c_str()].SetString(valueStr.c_str(), prefs_doc.GetAllocator());
             }
         }
 
-        SavePlayerPrefs();
+        savePlayerPrefs();
     }
 
     namespace Hooks {
         MAKE_EARLY_HOOK_FIND(PlayerPrefs_DeleteKey, "UnityEngine", "PlayerPrefs", "DeleteKey", void, System_String_o* key) {
-            unique_lock<shared_mutex> lock(prefsLock);
+            {
+                unique_lock<shared_mutex> lock(prefs_lock);
 
-            auto playerPrefsDoc = GetPlayerPrefs();
-            string keyStr = il2cpp_to_std(key);
-            Logger.info("Delete PlayerPrefs key: {}", keyStr.c_str());
-            if ((*playerPrefsDoc).HasMember(keyStr.c_str())) {
-                (*playerPrefsDoc).RemoveMember(keyStr.c_str());
-                Logger.info("Deleted PlayerPrefs key: {}", keyStr.c_str());
+                string keyStr = convert_il2cpp(key);
+                auto keyConst = keyStr.c_str();
+
+                Logger.info("Delete {}", keyConst);
+
+                if (prefs_doc.HasMember(keyConst)) {
+                    prefs_doc.RemoveMember(keyConst);
+                    Logger.info("Deleted {}", keyConst);
+                }
             }
+
+            savePlayerPrefs();
         }
 
         MAKE_EARLY_HOOK_FIND(PlayerPrefs_GetFloat, "UnityEngine", "PlayerPrefs", "GetFloat", float, System_String_o* key, float defaultValue) {
-            return GetPlayerPrefsValue<float>(key, defaultValue);
+            return getPrefsValue(key, defaultValue);
         }
 
         MAKE_EARLY_HOOK_FIND(PlayerPrefs_GetInt, "UnityEngine", "PlayerPrefs", "GetInt", int32_t, System_String_o* key, int32_t defaultValue) {
-            return GetPlayerPrefsValue<int32_t>(key, defaultValue);
+            return getPrefsValue(key, defaultValue);
         }
 
         MAKE_EARLY_HOOK_FIND(
             PlayerPrefs_GetString, "UnityEngine", "PlayerPrefs", "GetString", System_String_o*, System_String_o* key, System_String_o* defaultValue
         ) {
-            return GetPlayerPrefsValue<System_String_o*>(key, defaultValue);
+            return getPrefsValue(key, defaultValue);
         }
 
         MAKE_EARLY_HOOK_FIND(PlayerPrefs_SetFloat, "UnityEngine", "PlayerPrefs", "SetFloat", void, System_String_o* key, float value) {
-            SetPlayerPrefsValue(il2cpp_to_std(key), value);
+            setPrefsValue(convert_il2cpp(key), value);
         }
 
         MAKE_EARLY_HOOK_FIND(PlayerPrefs_SetInt, "UnityEngine", "PlayerPrefs", "SetInt", void, System_String_o* key, int32_t value) {
-            SetPlayerPrefsValue(il2cpp_to_std(key), value);
+            setPrefsValue(convert_il2cpp(key), value);
         }
 
         MAKE_EARLY_HOOK_FIND(PlayerPrefs_SetString, "UnityEngine", "PlayerPrefs", "SetString", void, System_String_o* key, System_String_o* value) {
-            SetPlayerPrefsValue(il2cpp_to_std(key), value);
+            setPrefsValue(convert_il2cpp(key), value);
         }
 
         MAKE_EARLY_HOOK_FIND(PlayerPrefs_HasKey, "UnityEngine", "PlayerPrefs", "HasKey", bool, System_String_o* key) {
-            shared_lock<shared_mutex> lock(prefsLock);
+            shared_lock<shared_mutex> lock(prefs_lock);
 
-            auto playerPrefsDoc = GetPlayerPrefs();
-            string keyStr = il2cpp_to_std(key);
-            Logger.info("Check PlayerPrefs has key: {}", keyStr.c_str());
-            return (*playerPrefsDoc).HasMember(keyStr.c_str());
+            string key_str = convert_il2cpp(key);
+            Logger.info("Check PlayerPrefs has key: {}", key_str.c_str());
+            return prefs_doc.HasMember(key_str.c_str());
         }
 
         MAKE_EARLY_HOOK_FIND(PlayerPrefs_Save, "UnityEngine", "PlayerPrefs", "Save", void) {
-            SavePlayerPrefs();
+            savePlayerPrefs();
         }
 
         MAKE_EARLY_HOOK_FIND(SaveIO_GenName, "", "SaveIO", "GenName", System_String_o*, System_String_o* fileName, bool perSystem) {
-            auto fileNameStr = il2cpp_to_std(fileName);
-            Logger.info("SaveIO_GenName: {}, {} = {}", fileNameStr.c_str(), perSystem, Utils::FileSystem::getDataDir());
+            auto filename_str = convert_il2cpp(fileName);
+            Logger.info("SaveIO_GenName: {}, {} = {}", filename_str.c_str(), perSystem, Utils::FileSystem::getDataDir());
 
-            return std_to_il2cpp<System_String_o*>(fmt::format("{}/{}", Utils::FileSystem::getDataDir(), fileNameStr));
+            return convert_il2cpp<System_String_o*>(fmt::format("{}/{}", Utils::FileSystem::getDataDir(), filename_str));
         }
     }  // namespace Hooks
-}  // namespace DanTheMan827::SaveRedirector
+}  // namespace DanTheMan827::SaveRedirector::SaveRedirection
