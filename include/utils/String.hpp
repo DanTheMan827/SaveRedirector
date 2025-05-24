@@ -6,16 +6,64 @@
 #include <string>
 #include <type_traits>
 
-namespace DanTheMan827::SaveRedirector::Utils::String {
-    template <typename T>
-    requires(std::is_same_v<T, Il2CppString*> || std::is_same_v<T, System_String_o*>)
-    inline std::string convert_il2cpp(T il2cpp_str) {
-        return ::AudicaHook::Utils::to_utf8(::AudicaHook::Utils::csstrtostr((T) (il2cpp_str)));
-    }
+namespace DanTheMan827::SaveRedirector::Utils {
+    class StringWrapper {
+       private:
+        std::string stdStr;
 
-    template <typename T = Il2CppString*>
-    requires(std::is_same_v<T, Il2CppString*> || std::is_same_v<T, System_String_o*>)
-    inline T convert_il2cpp(std::string const& std_str) {
-        return (T) il2cpp_utils::createcsstr((std_str));
-    }
-}  // namespace DanTheMan827::SaveRedirector::Utils::String
+       public:
+        StringWrapper(std::string str) {
+            stdStr = str;
+        }
+
+        StringWrapper(Il2CppString* il2cppStr) {
+            stdStr = ::AudicaHook::Utils::to_utf8(::AudicaHook::Utils::csstrtostr(il2cppStr));
+        }
+
+        StringWrapper(System_String_o* sysStr) {
+            stdStr = ::AudicaHook::Utils::to_utf8(::AudicaHook::Utils::csstrtostr(sysStr));
+        }
+
+        // Implicit conversion to std::string
+        operator std::string() {
+            return stdStr;
+        }
+
+        // Implicit conversion to Il2CppString*
+        operator Il2CppString*() {
+            return (Il2CppString*) il2cpp_utils::createcsstr(stdStr);
+        }
+
+        // Implicit conversion to System_String_o*
+        operator System_String_o*() {
+            return (System_String_o*) il2cpp_utils::createcsstr(stdStr);
+        }
+
+        // Assignment from std::string
+        StringWrapper& operator=(std::string& str) {
+            stdStr.assign(str);
+            return *this;
+        }
+
+        // Assignment from Il2CppString*
+        StringWrapper& operator=(Il2CppString* il2cppStr) {
+            stdStr.assign(::AudicaHook::Utils::to_utf8(::AudicaHook::Utils::csstrtostr(il2cppStr)));
+            return *this;
+        }
+
+        // Assignment from System_String_o*
+        StringWrapper& operator=(System_String_o* sysStr) {
+            stdStr.assign(::AudicaHook::Utils::to_utf8(::AudicaHook::Utils::csstrtostr(sysStr)));
+            return *this;
+        }
+
+        operator char const*() {
+            return stdStr.c_str();
+        }
+
+        // Accessor
+        std::string str() {
+            return stdStr;
+        }
+    };
+}  // namespace DanTheMan827::SaveRedirector::Utils

@@ -86,13 +86,13 @@
         "additionalData": {}
       },
       {
-        "id": "paper2_scotland2",
-        "versionRange": "^4.6.4",
+        "id": "json",
+        "versionRange": "^3.12.0",
         "additionalData": {}
       },
       {
-        "id": "rapidjson",
-        "versionRange": "^0.1.0",
+        "id": "paper2_scotland2",
+        "versionRange": "^4.6.4",
         "additionalData": {}
       },
       {
@@ -105,6 +105,22 @@
     ]
   },
   "restoredDependencies": [
+    {
+      "dependency": {
+        "id": "json",
+        "versionRange": "=3.12.0",
+        "additionalData": {
+          "headersOnly": true,
+          "branchName": "version/v3_12_0",
+          "compileOptions": {
+            "systemIncludes": [
+              "json/include"
+            ]
+          }
+        }
+      },
+      "version": "3.12.0"
+    },
     {
       "dependency": {
         "id": "audica-hook",
@@ -198,22 +214,6 @@
         }
       },
       "version": "0.1.1"
-    },
-    {
-      "dependency": {
-        "id": "rapidjson",
-        "versionRange": "=0.1.20250205132808",
-        "additionalData": {
-          "headersOnly": true,
-          "branchName": "version/v0_1_20250205132808+24b5e7a8",
-          "compileOptions": {
-            "systemIncludes": [
-              "rapidjson/include"
-            ]
-          }
-        }
-      },
-      "version": "0.1.20250205132808+24b5e7a8"
     }
   ]
 }
