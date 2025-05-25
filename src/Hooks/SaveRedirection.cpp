@@ -38,6 +38,47 @@ namespace DanTheMan827::SaveRedirector::SaveRedirection {
                 Logger.info("PlayerPrefs file not found: {}", prefs_path);
                 initialized = true;
             }
+
+            auto play_history_path = fmt::format("{}/{}", Utils::FileSystem::getDataDir(), "play_history.json");
+
+            if (AudicaHook::Utils::FileSystem::fileExists(play_history_path)) {
+                ifstream file;
+
+                file.open(play_history_path);
+
+                if (file.is_open()) {
+                    auto play_history_doc = json::parse(file);
+
+                    if (play_history_doc.contains("songs") && play_history_doc["songs"].is_array()) {
+                        auto play_history = play_history_doc["songs"];
+
+                        for (auto& song : play_history) {
+                            std::string song_id = song["songID"];
+                            auto song_history = song["history"];
+
+                            for (auto& song_play : song_history) {
+                                int32_t play_type = song_play["playType"];
+                                bool no_fail = song_play["noFail"];
+                                auto score_data = song_play["scoreData"];
+                                int32_t score = score_data["score"];
+                                int32_t difficulty = score_data["difficulty"];
+                                float percent = score_data["percent"];
+                                bool full_combo = score_data["fullCombo"];
+
+                                if (score > 0 &&
+                                    (!prefs_doc.contains(fmt::format("hs_{}", song_id)) || (prefs_doc[fmt::format("hs_{}", song_id)] < score))) {
+                                    prefs_doc[fmt::format("hs_{}", song_id)] = score;
+                                    prefs_doc[fmt::format("hs_diff_{}", song_id)] = difficulty;
+                                    prefs_doc[fmt::format("hs_fullcombo_{}", song_id)] = full_combo ? 1 : 0;
+                                    prefs_doc[fmt::format("hs_percent_{}", song_id)] = percent;
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Logger.error("Failed to open Play History file: {}", play_history_path);
+                }
+            }
         }
     }
 
@@ -95,7 +136,7 @@ namespace DanTheMan827::SaveRedirector::SaveRedirection {
             Logger.info("int found: {} = {}", key.str(), value);
             return value;
         } else if constexpr (is_same_v<T, float>) {
-            if (!(member.is_number_float())) {
+            if (!(member.is_number())) {
                 Logger.warn("{} is not float", key.str());
                 return defaultValue;
             }
